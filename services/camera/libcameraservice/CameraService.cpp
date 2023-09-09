@@ -2937,10 +2937,6 @@ String16 CameraService::BasicClient::getPackageName() const {
     return mClientPackageName;
 }
 
-bool CameraService::BasicClient::isFaceUnlockPackage() const {
-    std::string cpn = String8(mClientPackageName).string();
-    return cpn.compare("com.android.faceunlock") == 0;
-}
 
 int CameraService::BasicClient::getClientPid() const {
     return mClientPid;
@@ -3001,7 +2997,7 @@ status_t CameraService::BasicClient::startCameraOps() {
                 mClientPackageName, /*startIfModeDefault*/ false, mClientFeatureId,
                 String16("start camera ") + String16(mCameraIdStr));
 
-        if (!isFaceUnlockPackage() && res == AppOpsManager::MODE_ERRORED) {
+        if (res == AppOpsManager::MODE_ERRORED) {
             ALOGI("Camera %s: Access for \"%s\" has been revoked",
                     mCameraIdStr.string(), String8(mClientPackageName).string());
             return PERMISSION_DENIED;
@@ -3009,7 +3005,7 @@ status_t CameraService::BasicClient::startCameraOps() {
 
         // If the calling Uid is trusted (a native service), the AppOpsManager could
         // return MODE_IGNORED. Do not treat such case as error.
-        if (!isFaceUnlockPackage() && !mUidIsTrusted && res == AppOpsManager::MODE_IGNORED) {
+        if (!mUidIsTrusted && res == AppOpsManager::MODE_IGNORED) {
             ALOGI("Camera %s: Access for \"%s\" has been restricted",
                     mCameraIdStr.string(), String8(mClientPackageName).string());
             // Return the same error as for device policy manager rejection
